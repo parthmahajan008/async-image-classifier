@@ -1,35 +1,64 @@
+import { Kafka } from "kafkajs";
 import multer from "multer";
 import multiparty from "multiparty";
 import { NextApiRequest } from "next";
 import { NextResponse } from "next/server";
 
-
-
-const storage = multer.diskStorage({
-  destination: "./public/uploads",
-  filename: (req, file, callback) => {
-    callback(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage });
-
 export function middleware(req: NextApiRequest, res: NextResponse) {
-  const form = new multiparty.Form();
+  async () => {
+    console.log("Initializing kafka...");
+    const kafka = new Kafka({
+      clientId: "kafka-nodejs-starter",
+      brokers: ["localhost:9092"],
+    });
 
-  form.parse(req, async (error: any, fields: any, files: File[]) => {
-    if (error) {
-      console.error("Error parsing form:", error);
-      return NextResponse.json(
-        { error: "Failed to upload file" },
-        { status: 500 },
-      );
-    }
+    // Initialize the Kafka producer and consumer
+    const producer = kafka.producer();
+    const consumer = kafka.consumer({ groupId: "demoTopic-consumerGroup" });
 
-    req.body = files;
-    // req.files = files;
-    return NextResponse.next();
-  });
+    await producer.connect();
+    console.log("Connected to producer.");
+
+    await consumer.connect();
+    console.log("Connected to consumer.");
+
+    // KAFKA SUBSCRIPTION
+    const subscribeToTopic = async ({
+      topic,
+      fromBeginning,
+    }: {
+      topic: string;
+      fromBeginning: boolean;
+    }) => {
+      await consumer.subscribe({ topic, fromBeginning });
+    };
+    subscribeToTopic({ topic: "quickstart-events", fromBeginning: true });
+
+    await consumer.run({
+      eachMessage: async ({ topic, partition, message }) => {
+        console.log("Consumed a message = ", {
+          topic,
+          partition,
+          value: message.value!.toString(),
+        });
+      },
+    });
+
+    // Send an event to the demoTopic topic
+    // await producer.send({
+    //   topic: 'quickstart-events',
+    //   messages: [
+    //     { value: 'This event came from another service.' },
+    //   ],
+    // });
+
+    // Disconnect the producer once we’re done
+
+    // app.post("/api/producer-api", async (req, res) => {
+      
+    // });
+  };
+  return NextResponse.next();
 }
 
 export const config = {

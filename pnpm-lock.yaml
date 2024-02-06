@@ -38,6 +38,9 @@ dependencies:
   kafka-node:
     specifier: ^5.0.0
     version: 5.0.0
+  kafkajs:
+    specifier: ^2.2.4
+    version: 2.2.4
   lucide-react:
     specifier: ^0.321.0
     version: 0.321.0(react@18.2.0)
@@ -3562,6 +3565,11 @@ packages:
       snappy: 6.3.5
     transitivePeerDependencies:
       - supports-color
+    dev: false
+
+  /kafkajs@2.2.4:
+    resolution: {integrity: sha512-j/YeapB1vfPT2iOIUn/vxdyKEuhuY2PxMBvf5JWux6iSaukAccrMtXEY/Lb7OvavDhOWME589bpLrEdnVHjfjA==}
+    engines: {node: '>=14.0.0'}
     dev: false
 
   /keyv@4.5.4:
