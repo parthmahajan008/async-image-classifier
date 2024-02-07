@@ -46,7 +46,7 @@ class KafkaService {
         partition: number;
         message: KafkaMessage;
       }) => {
-        console.log({
+        console.info({
           topic,
           partition,
           value: message.value!.toString(),
@@ -64,7 +64,7 @@ class KafkaService {
   // }
 
   async sendMessage(topic: string, messages: any[]): Promise<void> {
-    console.log("Sending messages:", messages.length);
+    console.info("Sending messages:", messages.length);
     await this.producer.send({
       topic,
       messages: messages.map(({ key, file }) => ({

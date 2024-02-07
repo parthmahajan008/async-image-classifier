@@ -25,7 +25,7 @@ export default function HomePage() {
     try {
       const data = new FormData();
       data.set("file", selectedFile);
-      console.log(data);
+
       const res = fetch("/api/producer", {
         method: "POST",
         body: data,
