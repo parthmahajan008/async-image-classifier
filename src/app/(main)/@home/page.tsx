@@ -12,26 +12,45 @@ import Image from "next/image";
 import { Loader2 } from "lucide-react";
 import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/use-toast";
 export default function HomePage() {
   const [isLoading, setLoading] = useState<boolean>(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>();
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     setLoading(true);
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-    setSelectedFile(files[0]);
+    e.preventDefault();
+    if (!selectedFile) return;
+    try {
+      const data = new FormData();
+      data.set("file", selectedFile);
+      console.log(data);
+      const res = fetch("/api/producer", {
+        method: "POST",
+        body: data,
+      });
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewImage(reader.result as string);
-    };
+      if (!(await res).ok) {
+        toast({
+          title: "Failed",
+          description: `${(await res).statusText}`,
+        });
+      } else if ((await res).ok) {
+        toast({
+          title: "Scheduled",
+          description: `Your ${selectedFile.name} is scheduled for upload`,
+        });
+        return;
+      }
+    } catch (e: any) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    reader.readAsDataURL(files[0]);
-    setLoading(false);
-  }
-  const onSubmitDisabled = !previewImage && !selectedFile;
+  // const onSubmitDisabled = !previewImage && !selectedFile;
   return (
     <div className="flex h-full items-center justify-center">
       <Card>
@@ -41,18 +60,20 @@ export default function HomePage() {
             Upload a Image to classify asynchronously
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <div>
-            <Input
-              id="img"
-              type="file"
-              accept="image/*"
-              onChange={handleFileChange}
-            />
-            {isLoading && (
-              <Loader2 className="mx-auto mt-6 h-6 w-6 animate-spin  text-slate-500" />
-            )}
-            {previewImage && selectedFile && (
+        <form onSubmit={onSubmit}>
+          <CardContent>
+            <div>
+              <Input
+                id="img"
+                type="file"
+                accept="image/*"
+                onChange={(e) => setSelectedFile(e.target.files?.[0])}
+              />
+
+              {isLoading && (
+                <Loader2 className="mx-auto mt-6 h-6 w-6 animate-spin  text-slate-500" />
+              )}
+              {/* {previewImage && selectedFile && (
               <div className="relative aspect-video w-full">
                 <Image
                   src={previewImage}
@@ -61,8 +82,8 @@ export default function HomePage() {
                   fill
                 />
               </div>
-            )}
-            {previewImage && selectedFile && (
+            )} */}
+              {/* {previewImage && selectedFile && (
               <Button
                 variant={"destructive"}
                 onClick={() => {
@@ -73,14 +94,15 @@ export default function HomePage() {
                 {" "}
                 Remove File
               </Button>
-            )}
-          </div>
-        </CardContent>
-        <CardFooter>
-          <Button className="ml-auto" disabled={onSubmitDisabled}>
-            Classify
-          </Button>
-        </CardFooter>
+            )} */}
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="ml-auto" disabled={isLoading}>
+              Classify
+            </Button>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );

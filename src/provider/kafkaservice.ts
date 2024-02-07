@@ -56,13 +56,23 @@ class KafkaService {
     });
   }
 
+  // async sendMessage(topic: string, messages: any[]): Promise<void> {
+  //   await this.producer.send({
+  //     topic,
+  //     messages,
+  //   });
+  // }
+
   async sendMessage(topic: string, messages: any[]): Promise<void> {
+    console.log("Sending messages:", messages.length);
     await this.producer.send({
       topic,
-      messages,
+      messages: messages.map(({ key, file }) => ({
+        key,
+        value: JSON.stringify(file), // Convert file data to JSON string
+      })),
     });
   }
-
   async disconnect(): Promise<void> {
     await this.producer.disconnect();
     await this.consumer.disconnect();
